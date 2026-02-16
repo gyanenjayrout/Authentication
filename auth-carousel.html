@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session vs JWT Authentication - LinkedIn Carousel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #0a0a0a;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .carousel-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(800px, 1fr));
+            gap: 30px;
+            max-width: 1600px;
+        }
+
+        .slide {
+            width: 1080px;
+            height: 1080px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 0;
+            padding: 80px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        /* Slide variations */
+        .slide-1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .slide-2 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .slide-3 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .slide-4 {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .slide-5 {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .slide-6 {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+
+        .slide-7 {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        .slide-8 {
+            background: linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%);
+        }
+
+        /* Decorative elements */
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .slide-number {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.3);
+        }
+
+        .slide-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 72px;
+            font-weight: 700;
+            color: white;
+            line-height: 1.1;
+            margin-bottom: 40px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .slide-subtitle {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 32px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.95);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .icon {
+            font-size: 36px;
+        }
+
+        .content-box {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .content-box h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .content-box p, .content-box li {
+            font-size: 22px;
+            color: rgba(255,255,255,0.9);
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .content-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .content-box li {
+            padding-left: 35px;
+            position: relative;
+        }
+
+        .content-box li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: white;
+            font-weight: 700;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .comparison-item {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .comparison-item h4 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .comparison-item p {
+            font-size: 19px;
+            color: rgba(255,255,255,0.9);
+            line-height: 1.5;
+        }
+
+        .highlight {
+            background: rgba(255,255,255,0.25);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .emoji {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .footer-badge {
+            position: absolute;
+            bottom: 40px;
+            left: 80px;
+            right: 80px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            border-radius: 50px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .footer-badge p {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .attack-box {
+            background: rgba(255,100,100,0.2);
+            border: 2px solid rgba(255,100,100,0.4);
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .attack-box h4 {
+            color: #ffdddd;
+            font-size: 22px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .attack-box p {
+            color: rgba(255,255,255,0.95);
+            font-size: 19px;
+            line-height: 1.5;
+        }
+
+        .check-mark {
+            color: #4ade80;
+            font-size: 28px;
+            margin-right: 10px;
+        }
+
+        .vs-text {
+            font-size: 96px;
+            font-weight: 700;
+            color: white;
+            text-align: center;
+            margin: 60px 0;
+            font-family: 'Space Grotesk', sans-serif;
+            text-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+        .final-slide {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .final-slide .slide-title {
+            font-size: 80px;
+            margin-bottom: 30px;
+        }
+
+        .final-slide p {
+            font-size: 28px;
+            color: rgba(255,255,255,0.9);
+            max-width: 700px;
+            line-height: 1.5;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .carousel-container {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+            .slide {
+                page-break-after: always;
+                margin: 0;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="carousel-container">
+        <!-- Slide 1: Title Slide -->
+        <div class="slide slide-1">
+            <div class="slide-number">1/8</div>
+            <div class="emoji">🔐</div>
+            <h1 class="slide-title">Session vs JWT Authentication</h1>
+            <p style="font-size: 32px; color: rgba(255,255,255,0.9); line-height: 1.4; margin-bottom: 40px;">
+                Understanding the two most popular authentication methods in modern web development
+            </p>
+            <div class="content-box">
+                <p><strong>What you'll learn:</strong></p>
+                <ul>
+                    <li>Session-based authentication</li>
+                    <li>JWT authentication</li>
+                    <li>Security considerations</li>
+                    <li>Best practices</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 2: Session-Based Authentication -->
+        <div class="slide slide-2">
+            <div class="slide-number">2/8</div>
+            <h2 class="slide-subtitle">📊 Session-Based Authentication</h2>
+            <div class="content-box">
+                <h3>How it works:</h3>
+                <ul>
+                    <li>Server stores user session data</li>
+                    <li>Session ID sent to client</li>
+                    <li>Client includes session ID with every request</li>
+                    <li>Server looks up session to identify user</li>
+                </ul>
+            </div>
+            <div class="content-box">
+                <h3>Key Characteristics:</h3>
+                <p><span class="highlight">Stateful</span> - Server maintains session state</p>
+                <p><span class="highlight">Database dependent</span> - Requires session storage</p>
+            </div>
+        </div>
+
+        <!-- Slide 3: JWT Authentication -->
+        <div class="slide slide-3">
+            <div class="slide-number">3/8</div>
+            <h2 class="slide-subtitle">🎫 JWT Authentication</h2>
+            <div class="content-box">
+                <h3>How it works:</h3>
+                <ul>
+                    <li>Server generates signed token with user details</li>
+                    <li>Token sent to client</li>
+                    <li>Client includes token with every request</li>
+                    <li>Server verifies token signature</li>
+                </ul>
+            </div>
+            <div class="content-box">
+                <h3>Key Characteristics:</h3>
+                <p><span class="highlight">Stateless</span> - No server-side session storage</p>
+                <p><span class="highlight">Scalable</span> - Perfect for distributed systems</p>
+            </div>
+        </div>
+
+        <!-- Slide 4: What is a Cookie? -->
+        <div class="slide slide-4">
+            <div class="slide-number">4/8</div>
+            <h2 class="slide-subtitle">🍪 What is a Cookie?</h2>
+            <div class="content-box">
+                <h3>Definition:</h3>
+                <p>A small piece of data stored in the browser by the server</p>
+            </div>
+            <div class="content-box">
+                <h3>Key Features:</h3>
+                <ul>
+                    <li>Automatically sent with every HTTP request</li>
+                    <li>Used to maintain user state (like session ID)</li>
+                    <li>Can store JWT tokens for stateless auth</li>
+                </ul>
+            </div>
+            <div class="content-box" style="background: rgba(255,255,255,0.25);">
+                <p style="font-size: 20px;"><strong>💡 Important:</strong> JWT in HttpOnly cookie = Stateless auth with cookie transport!</p>
+            </div>
+        </div>
+
+        <!-- Slide 5: Storage Comparison -->
+        <div class="slide slide-5">
+            <div class="slide-number">5/8</div>
+            <h2 class="slide-subtitle">⚖️ HttpOnly Cookie vs localStorage</h2>
+            <div class="comparison-grid">
+                <div class="comparison-item">
+                    <h4>🔒 HttpOnly Cookie</h4>
+                    <p><span class="check-mark">✓</span> Protected from XSS</p>
+                    <p><span class="check-mark">✓</span> JavaScript cannot access</p>
+                    <p><span class="check-mark">✓</span> Better security</p>
+                    <p style="margin-top: 15px; font-size: 17px; opacity: 0.8;">⚠️ Needs CSRF protection</p>
+                </div>
+                <div class="comparison-item">
+                    <h4>📦 localStorage</h4>
+                    <p>⚠️ Vulnerable to XSS</p>
+                    <p>⚠️ JavaScript can access</p>
+                    <p>⚠️ Security risk</p>
+                    <p style="margin-top: 15px; font-size: 17px; opacity: 0.8;">✓ No CSRF risk</p>
+                </div>
+            </div>
+            <div class="footer-badge">
+                <p>Recommendation: Use HttpOnly cookies with Secure + SameSite</p>
+            </div>
+        </div>
+
+        <!-- Slide 6: Security Attacks -->
+        <div class="slide slide-6">
+            <div class="slide-number">6/8</div>
+            <h2 class="slide-subtitle">⚠️ Security Threats</h2>
+            <div class="attack-box">
+                <h4>🚨 XSS (Cross-Site Scripting)</h4>
+                <p>Untrusted data enters web application → Malicious scripts executed → Can steal tokens from localStorage</p>
+            </div>
+            <div class="attack-box">
+                <h4>🚨 CSRF (Cross-Site Request Forgery)</h4>
+                <p>Authenticated user tricked into performing unwanted actions → Exploits automatic cookie sending → Prevented with SameSite=Strict</p>
+            </div>
+        </div>
+
+        <!-- Slide 7: Best Practices -->
+        <div class="slide slide-7">
+            <div class="slide-number">7/8</div>
+            <h2 class="slide-subtitle">✅ Security Best Practices</h2>
+            <div class="content-box">
+                <h3>For HttpOnly Cookies:</h3>
+                <ul>
+                    <li><strong>HttpOnly</strong> - Prevents JavaScript access</li>
+                    <li><strong>Secure</strong> - Only transmitted over HTTPS</li>
+                    <li><strong>SameSite=Strict</strong> - Prevents CSRF attacks</li>
+                </ul>
+            </div>
+            <div class="content-box">
+                <h3>For Authorization Header:</h3>
+                <ul>
+                    <li>No CSRF risk (not sent automatically)</li>
+                    <li>Avoid localStorage (XSS vulnerable)</li>
+                    <li>Consider secure storage alternatives</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 8: Final Recommendation -->
+        <div class="slide slide-8 final-slide">
+            <div class="slide-number">8/8</div>
+            <div class="emoji">🎯</div>
+            <h1 class="slide-title">The Verdict</h1>
+            <p style="margin-bottom: 40px;">
+                <strong>Recommended Approach:</strong><br>
+                JWT in HttpOnly cookies with Secure and SameSite=Strict
+            </p>
+            <div class="content-box" style="max-width: 800px;">
+                <p>This combines the stateless benefits of JWT with the security advantages of HttpOnly cookies, protecting against both XSS and CSRF attacks.</p>
+            </div>
+            <div style="margin-top: 60px; font-size: 24px; color: rgba(255,255,255,0.8);">
+                <p>💡 Found this helpful? Connect with me on LinkedIn!</p>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center; color: #666; margin-top: 40px; font-size: 14px;">
+        <p>To download individual slides: Right-click on each slide → Save Image As</p>
+        <p>Or use your browser's print function to save as PDF</p>
+    </div>
+</body>
+</html>
